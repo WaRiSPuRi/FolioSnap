@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FolioSnap — Build your portfolio site</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+      --text: #f0ede8; --muted: #888580; --accent: #e8d5a0; --accent2: #c4a96b;
+      --r: 12px; --rs: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 2.5rem; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(10,10,10,0.9); backdrop-filter: blur(12px); z-index: 100;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); text-decoration: none; }
+    .nav-links { display: flex; align-items: center; gap: 1rem; }
+    .btn { padding: 8px 18px; border-radius: var(--rs); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.15s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .btn-accent { background: var(--accent); color: #0a0a0a; font-weight: 600; }
+    .btn-accent:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    /* HERO */
+    .hero { max-width: 780px; margin: 0 auto; padding: 7rem 2rem 5rem; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(232,213,160,0.1); border: 1px solid rgba(232,213,160,0.2);
+      border-radius: 100px; padding: 5px 16px;
+      font-size: 0.78rem; font-weight: 500; color: var(--accent); margin-bottom: 2rem;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.8rem, 7vw, 5rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 1.5rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 1.05rem; line-height: 1.85; margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .hero-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-large { padding: 12px 28px; font-size: 0.95rem; }
+
+    /* FEATURES */
+    .features-section { max-width: 900px; margin: 5rem auto 0; padding: 0 2rem 6rem; }
+    .features-label { text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+    .features-title { text-align: center; font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 3rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; transition: border-color 0.2s; }
+    .feature-card:hover { border-color: var(--border2); }
+    .feature-icon { font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .feature-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.4rem; }
+    .feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+    /* HOW IT WORKS */
+    .how-section { max-width: 700px; margin: 0 auto; padding: 0 2rem 6rem; text-align: center; }
+    .how-title { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 3rem; }
+    .steps { display: flex; flex-direction: column; gap: 1px; }
+    .step { display: flex; gap: 1.25rem; align-items: flex-start; padding: 1.25rem; border-radius: var(--r); transition: background 0.15s; text-align: left; }
+    .step:hover { background: var(--surface); }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+    .step-title { font-weight: 500; font-size: 0.92rem; margin-bottom: 0.25rem; }
+    .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* CTA BOTTOM */
+    .cta-section { max-width: 600px; margin: 0 auto; padding: 0 2rem 6rem; text-align: center; }
+    .cta-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 3rem 2rem; }
+    .cta-box h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .cta-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; text-align: center; font-size: 0.8rem; color: var(--muted); }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem 1.25rem; }
+      .hero { padding: 5rem 1.25rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">FolioSnap</a>
+  <div class="nav-links">
+    <a href="/login.html" class="btn btn-ghost">Sign in</a>
+    <a href="/login.html#signup" class="btn btn-accent">Get started free</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge"><span class="badge-dot"></span> Free to use · No coding required</div>
+  <h1>Your portfolio site,<br><span>live in minutes.</span></h1>
+  <p>Fill in your info, upload your resume, and publish a beautiful portfolio website that you can share with anyone.</p>
+  <div class="hero-ctas">
+    <a href="/login.html#signup" class="btn btn-accent btn-large">Create your portfolio →</a>
+    <a href="#how" class="btn btn-ghost btn-large">See how it works</a>
+  </div>
+</div>
+
+<div class="features-section">
+  <div class="features-label">Everything you need</div>
+  <div class="features-title">Built for people, not developers</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📝</div>
+      <div class="feature-title">Simple editor</div>
+      <div class="feature-desc">Fill in your experience, skills, education, and projects through a clean, guided form.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📄</div>
+      <div class="feature-title">Resume upload</div>
+      <div class="feature-desc">Upload a PDF resume that visitors can download directly from your live portfolio page.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👁</div>
+      <div class="feature-title">Live preview</div>
+      <div class="feature-desc">See exactly what your portfolio looks like before you publish it to the world.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <div class="feature-title">One-click publish</div>
+      <div class="feature-desc">Hit publish and get a shareable link instantly. Update and republish anytime.</div>
+    </div>
+  </div>
+</div>
+
+<div class="how-section" id="how">
+  <div class="how-title">How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Create a free account</div>
+        <div class="step-desc">Sign up with your email in seconds — no credit card required.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Fill in your info</div>
+        <div class="step-desc">Add your profile, summary, work experience, education, projects, and skills using the dashboard editor.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Upload your resume</div>
+        <div class="step-desc">Drop in your PDF resume so visitors can download it directly from your portfolio.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Publish and share</div>
+        <div class="step-desc">Hit publish and get a link like <strong style="color:var(--accent)">foliosnap.app/portfolio/your-name</strong> to share anywhere.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-section">
+  <div class="cta-box">
+    <h2>Ready to build yours?</h2>
+    <p>Join and get your portfolio live today — completely free.</p>
+    <a href="/login.html#signup" class="btn btn-accent btn-large">Get started free →</a>
+  </div>
+</div>
+
+<footer>
+  <p>Made with ✦ by <span>FolioSnap</span></p>
+</footer>
+
+</body>
+</html>
