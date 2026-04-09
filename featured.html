@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Featured Portfolios — FolioSnap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--bg:#0a0a0a;--surface:#111;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#f0ede8;--muted:#888580;--accent:#e8d5a0;--r:12px;--rs:8px;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.7;}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,10,0.92);backdrop-filter:blur(12px);z-index:100;}
+    .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent);text-decoration:none;}
+    .nav-right{display:flex;gap:1rem;}
+    .btn{padding:7px 16px;border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;text-decoration:none;transition:all .15s;border:none;display:inline-flex;align-items:center;}
+    .bo{background:transparent;color:var(--muted);border:1px solid var(--border2);}
+    .bo:hover{color:var(--text);border-color:var(--accent);}
+    .ba{background:var(--accent);color:#0a0a0a;font-weight:600;}
+    .ba:hover{background:#c4a96b;}
+    .hero{max-width:700px;margin:0 auto;padding:5rem 2rem 3rem;text-align:center;}
+    h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:1rem;}
+    h1 span{color:var(--accent);}
+    .hero p{color:var(--muted);font-size:1rem;margin-bottom:2rem;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;max-width:1000px;margin:0 auto;padding:0 2rem 5rem;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .2s;text-decoration:none;color:inherit;display:block;}
+    .card:hover{border-color:var(--border2);transform:translateY(-3px);}
+    .card-top{padding:1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+    .ava{width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:#0a0a0a;flex-shrink:0;}
+    .card-name{font-weight:600;font-size:.9rem;}
+    .card-role{font-size:.75rem;color:var(--muted);}
+    .card-body{padding:1rem 1.25rem;}
+    .card-summary{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+    .card-tags{display:flex;flex-wrap:wrap;gap:5px;}
+    .ctag{padding:2px 8px;background:rgba(255,255,255,0.05);border-radius:100px;font-size:.68rem;color:var(--muted);}
+    .card-footer{padding:.75rem 1.25rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--muted);}
+    .empty{text-align:center;padding:5rem 2rem;color:var(--muted);font-size:.9rem;}
+    .empty h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--text);margin-bottom:.5rem;}
+    .loading-grid{text-align:center;padding:4rem;color:var(--muted);}
+  </style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/">FolioSnap</a>
+  <div class="nav-right">
+    <a href="/login.html" class="btn bo">Sign in</a>
+    <a href="/login.html#signup" class="btn ba">Get started free</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Featured <span>portfolios</span></h1>
+  <p>Real portfolios built with FolioSnap — get inspired and build your own.</p>
+  <a href="/login.html#signup" class="btn ba" style="padding:10px 24px;font-size:.9rem;">Create yours free →</a>
+</div>
+
+<div id="grid-wrap" class="loading-grid">Loading featured portfolios…</div>
+
+<script>
+  var _sb=window.supabase.createClient('https://aoagptbyrvigckrxexru.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvYWdwdGJ5cnZpZ2NrcnhleHJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2OTMzODMsImV4cCI6MjA5MTI2OTM4M30.oz3dkZj3mFea5Euit8dXwpwiOcWC_59GodzvueMiKbM');
+
+  function ini(n){return(n||'?').split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);}
+
+  async function load(){
+    var r=await _sb.from('portfolios').select('content,slug,updated_at').not('slug','is',null).order('updated_at',{ascending:false}).limit(24);
+    var wrap=document.getElementById('grid-wrap');
+    if(!r.data||!r.data.length){
+      wrap.className='empty';
+      wrap.innerHTML='<h3>No portfolios yet</h3><p>Be the first to publish yours!</p>';
+      return;
+    }
+    var html='<div class="grid">';
+    r.data.forEach(function(row){
+      var d=row.content||{},p=d.profile||{},c=d.contact||{};
+      var name=p.name||'Anonymous';
+      var role=[p.role,p.location].filter(Boolean).join(' · ');
+      var skills=(d.skills||[]).slice(0,4);
+      var summary=(d.summary||'').slice(0,120);
+      var url='/portfolio/'+row.slug;
+      html+='<a href="'+url+'" class="card">'
+        +'<div class="card-top"><div class="ava">'+ini(name)+'</div><div><div class="card-name">'+name+'</div><div class="card-role">'+role+'</div></div></div>'
+        +'<div class="card-body">'+(summary?'<div class="card-summary">'+summary+'</div>':'')
+        +'<div class="card-tags">'+skills.map(function(s){return'<span class="ctag">'+s+'</span>';}).join('')+'</div>'
+        +'</div>'
+        +'<div class="card-footer"><span>'+row.slug+'</span><span>View portfolio →</span></div>'
+        +'</a>';
+    });
+    html+='</div>';
+    wrap.className='';
+    wrap.innerHTML=html;
+  }
+  load();
+</script>
+</body>
+</html>
