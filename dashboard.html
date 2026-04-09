@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Portfol.io</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f8f7; --white: #fff; --border: #e5e4e0; --border2: #d0cfcb;
+      --text: #1a1917; --muted: #6b6a66; --subtle: #9b9a96;
+      --accent: #1a1917; --blue: #2563eb; --green: #16a34a; --red: #dc2626;
+      --r: 12px; --rs: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; }
+
+    /* TOP NAV */
+    .topnav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-user { font-size: 0.8rem; color: var(--muted); }
+    .btn { padding: 7px 14px; border-radius: var(--rs); font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+    .btn-outline:hover { border-color: var(--text); color: var(--text); }
+    .btn-primary { background: var(--text); color: #fff; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-green { background: #16a34a; color: #fff; }
+    .btn-green:hover { background: #15803d; }
+    .btn-primary:disabled, .btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* LAYOUT */
+    .layout { display: flex; min-height: calc(100vh - 56px); }
+
+    /* SIDEBAR NAV */
+    .sidenav { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+    .sidenav-label { font-size: 0.67rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--subtle); padding: 0 1.25rem; margin-bottom: 4px; margin-top: 1.25rem; }
+    .sidenav-label:first-child { margin-top: 0; }
+    .sidenav-item { display: flex; align-items: center; gap: 8px; padding: 7px 1.25rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; transition: all 0.12s; border-left: 2px solid transparent; }
+    .sidenav-item:hover { background: var(--bg); color: var(--text); }
+    .sidenav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--text); font-weight: 500; }
+    .sidenav-icon { width: 16px; text-align: center; font-size: 12px; }
+
+    /* MAIN */
+    .main { flex: 1; padding: 2rem; max-width: 800px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header { margin-bottom: 2rem; }
+    .page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+    .page-sub { font-size: 0.85rem; color: var(--muted); }
+
+    /* CARDS */
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; margin-bottom: 1rem; }
+    .card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+
+    /* FORM */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-grid.single { grid-template-columns: 1fr; }
+    .form-field { margin-bottom: 0; }
+    .form-field.full { grid-column: span 2; }
+    .form-label { display: block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtle); margin-bottom: 5px; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: var(--rs);
+      font-family: 'Inter', sans-serif; font-size: 0.85rem;
+      background: var(--white); color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: var(--text); }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .form-hint { font-size: 0.75rem; color: var(--subtle); margin-top: 4px; }
+
+    /* DYNAMIC LIST ITEMS */
+    .item-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .list-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); padding: 1rem; position: relative; }
+    .list-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .list-item-title { font-weight: 500; font-size: 0.85rem; }
+    .remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; }
+    .remove-btn:hover { background: #fee2e2; }
+    .add-btn { width: 100%; padding: 8px; border: 1px dashed var(--border2); border-radius: var(--rs); background: transparent; color: var(--muted); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .add-btn:hover { border-color: var(--text); color: var(--text); }
+
+    /* SKILLS TAGS */
+    .skills-input-row { display: flex; gap: 8px; margin-bottom: 0.75rem; }
+    .skills-input-row .form-input { flex: 1; }
+    .tags-container { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+    .skill-tag { display: flex; align-items: center; gap: 5px; padding: 4px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 100px; font-size: 0.78rem; }
+    .skill-tag button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; line-height: 1; padding: 0; }
+    .skill-tag button:hover { color: var(--red); }
+
+    /* UPLOAD */
+    .upload-zone { border: 2px dashed var(--border2); border-radius: var(--rs); padding: 2rem; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--text); background: var(--bg); }
+    .upload-zone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .upload-zone-text { font-size: 0.85rem; color: var(--muted); }
+    .upload-zone-text strong { color: var(--text); }
+    .upload-progress { display: none; margin-top: 1rem; }
+    .upload-progress.visible { display: block; }
+    .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); transition: width 0.3s; }
+    .file-attached { display: none; align-items: center; gap: 10px; padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--rs); margin-top: 0.75rem; font-size: 0.82rem; color: var(--green); }
+    .file-attached.visible { display: flex; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1a1917; color: #fff; padding: 10px 16px; border-radius: var(--rs); font-size: 0.82rem; font-weight: 500; z-index: 999; display: none; }
+    .toast.show { display: block; animation: fadeout 2.5s forwards 0.3s; }
+    .toast.error { background: var(--red); }
+    @keyframes fadeout { 90% { opacity: 1; } 100% { opacity: 0; } }
+
+    /* PUBLISH PAGE */
+    .publish-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; text-align: center; }
+    .publish-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .publish-card h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .publish-card p { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+    .publish-url { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); padding: 10px 12px; margin: 1rem 0; font-size: 0.85rem; font-family: monospace; word-break: break-all; }
+    .copy-btn { flex-shrink: 0; padding: 5px 12px; background: var(--text); color: #fff; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="logo" href="/">Portfol.io</a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-email"></span>
+    <a href="/preview.html" target="_blank" class="btn btn-outline">👁 Preview</a>
+    <button class="btn btn-green" id="publish-btn" onclick="publishSite()">🚀 Publish</button>
+    <button class="btn btn-outline" onclick="handleLogout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- SIDE NAV -->
+  <aside class="sidenav">
+    <div class="sidenav-label">Portfolio</div>
+    <div class="sidenav-item active" onclick="showPage('profile', this)"><span class="sidenav-icon">◎</span> Profile</div>
+    <div class="sidenav-item" onclick="showPage('summary', this)"><span class="sidenav-icon">◈</span> Summary</div>
+    <div class="sidenav-item" onclick="showPage('experience', this)"><span class="sidenav-icon">◉</span> Experience</div>
+    <div class="sidenav-item" onclick="showPage('education', this)"><span class="sidenav-icon">◇</span> Education</div>
+    <div class="sidenav-item" onclick="showPage('projects', this)"><span class="sidenav-icon">◈</span> Projects</div>
+    <div class="sidenav-item" onclick="showPage('skills', this)"><span class="sidenav-icon">⬡</span> Skills</div>
+    <div class="sidenav-item" onclick="showPage('contact', this)"><span class="sidenav-icon">◌</span> Contact</div>
+    <div class="sidenav-label">Resume</div>
+    <div class="sidenav-item" onclick="showPage('resume', this)"><span class="sidenav-icon">□</span> Upload Resume</div>
+    <div class="sidenav-label">Publish</div>
+    <div class="sidenav-item" onclick="showPage('publish', this)"><span class="sidenav-icon">✦</span> Publish Site</div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- PROFILE -->
+    <div id="page-profile" class="page active">
+      <div class="page-header">
+        <div class="page-title">Profile</div>
+        <div class="page-sub">Your basic info shown at the top of your portfolio.</div>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Full name</label>
+            <input class="form-input" id="p-name" placeholder="Waris Puri" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Role / tagline</label>
+            <input class="form-input" id="p-role" placeholder="Builder & Creator" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Location</label>
+            <input class="form-input" id="p-location" placeholder="Milton, Ontario" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Status</label>
+            <input class="form-input" id="p-status" placeholder="Open to opportunities" />
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="savePage('profile')">Save</button></div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div id="page-summary" class="page">
+      <div class="page-header">
+        <div class="page-title">Summary</div>
+        <div class="page-sub">A short paragraph introducing yourself.</div>
+      </div>
+      <div class="card">
+        <div class="form-field">
+          <label class="form-label">About you</label>
+          <textarea class="form-textarea" id="p-summary" style="min-height:140px;" placeholder="Hi, I'm Waris — a builder from Milton, Ontario..."></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="savePage('summary')">Save</button></div>
+    </div>
+
+    <!-- EXPERIENCE -->
+    <div id="page-experience" class="page">
+      <div class="page-header">
+        <div class="page-title">Work Experience</div>
+        <div class="page-sub">Add your jobs, volunteer roles, and other experience.</div>
+      </div>
+      <div id="exp-list" class="item-list"></div>
+      <button class="add-btn" onclick="addExperience()">+ Add experience</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem;"><button class="btn btn-primary" onclick="savePage('experience')">Save</button></div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div id="page-education" class="page">
+      <div class="page-header">
+        <div class="page-title">Education</div>
+        <div class="page-sub">Schools, programs, certifications, and courses.</div>
+      </div>
+      <div id="edu-list" class="item-list"></div>
+      <button class="add-btn" onclick="addEducation()">+ Add education</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem;"><button class="btn btn-primary" onclick="savePage('education')">Save</button></div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div id="page-projects" class="page">
+      <div class="page-header">
+        <div class="page-title">Projects</div>
+        <div class="page-sub">Showcase things you've built.</div>
+      </div>
+      <div id="proj-list" class="item-list"></div>
+      <button class="add-btn" onclick="addProject()">+ Add project</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem;"><button class="btn btn-primary" onclick="savePage('projects')">Save</button></div>
+    </div>
+
+    <!-- SKILLS -->
+    <div id="page-skills" class="page">
+      <div class="page-header">
+        <div class="page-title">Skills</div>
+        <div class="page-sub">Add your skills as tags.</div>
+      </div>
+      <div class="card">
+        <div class="skills-input-row">
+          <input class="form-input" id="skill-input" placeholder="e.g. Python" onkeydown="handleSkillKey(event)" />
+          <button class="btn btn-primary" onclick="addSkill()">Add</button>
+        </div>
+        <div class="tags-container" id="skills-tags"></div>
+        <p class="form-hint" style="margin-top:10px;">Press Enter or click Add to add a skill. Click × to remove.</p>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <div class="card-title">Languages</div>
+        <div class="skills-input-row">
+          <input class="form-input" id="lang-input" placeholder="e.g. English" onkeydown="handleLangKey(event)" />
+          <button class="btn btn-primary" onclick="addLang()">Add</button>
+        </div>
+        <div class="tags-container" id="langs-tags"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="savePage('skills')">Save</button></div>
+    </div>
+
+    <!-- CONTACT -->
+    <div id="page-contact" class="page">
+      <div class="page-header">
+        <div class="page-title">Contact Info</div>
+        <div class="page-sub">How people can reach you.</div>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="c-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Phone (optional)</label>
+            <input class="form-input" id="c-phone" placeholder="+1 555-000-0000" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">LinkedIn URL</label>
+            <input class="form-input" id="c-linkedin" placeholder="https://linkedin.com/in/..." />
+          </div>
+          <div class="form-field">
+            <label class="form-label">GitHub URL</label>
+            <input class="form-input" id="c-github" placeholder="https://github.com/..." />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Twitter / X URL</label>
+            <input class="form-input" id="c-twitter" placeholder="https://twitter.com/..." />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Website (optional)</label>
+            <input class="form-input" id="c-website" placeholder="https://yoursite.com" />
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="savePage('contact')">Save</button></div>
+    </div>
+
+    <!-- RESUME UPLOAD -->
+    <div id="page-resume" class="page">
+      <div class="page-header">
+        <div class="page-title">Upload Resume</div>
+        <div class="page-sub">Upload a PDF — visitors can download it from your portfolio.</div>
+      </div>
+      <div class="card">
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('resume-file').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+          <div class="upload-zone-icon">📄</div>
+          <div class="upload-zone-text"><strong>Click to upload</strong> or drag and drop<br>PDF only, max 5MB</div>
+          <input type="file" id="resume-file" accept=".pdf" style="display:none;" onchange="handleFileSelect(event)" />
+        </div>
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:6px;" id="upload-status">Uploading…</p>
+        </div>
+        <div class="file-attached" id="file-attached">
+          <span>✓</span>
+          <span id="file-name"></span>
+          <button onclick="removeResume()" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:0.78rem;">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLISH -->
+    <div id="page-publish" class="page">
+      <div class="page-header">
+        <div class="page-title">Publish Your Site</div>
+        <div class="page-sub">Make your portfolio live and shareable.</div>
+      </div>
+      <div class="publish-card">
+        <div class="publish-icon">🚀</div>
+        <h2>Ready to go live?</h2>
+        <p>Click Publish to generate your live portfolio link. You can update and republish anytime.</p>
+        <button class="btn btn-green" style="width:100%;padding:12px;font-size:0.9rem;justify-content:center;" id="big-publish-btn" onclick="publishSite()">Publish my portfolio</button>
+        <div id="publish-result" style="display:none;margin-top:1.5rem;">
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">Your portfolio is live at:</p>
+          <div class="publish-url">
+            <span id="live-url"></span>
+            <button class="copy-btn" onclick="copyUrl()">Copy</button>
+          </div>
+          <a id="view-live-btn" href="#" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.75rem;">View live site →</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── PASTE YOUR SUPABASE CREDENTIALS HERE ──
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentUser = null;
+  let portfolioData = { profile: {}, summary: '', experience: [], education: [], projects: [], skills: [], languages: [], contact: {}, resumeUrl: '' };
+
+  // ── AUTH CHECK ──
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = '/'; return; }
+    currentUser = session.user;
+    document.getElementById('nav-email').textContent = currentUser.email;
+    await loadData();
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  }
+
+  // ── LOAD DATA ──
+  async function loadData() {
+    const { data } = await supabase.from('portfolios').select('*').eq('user_id', currentUser.id).single();
+    if (data) {
+      portfolioData = { ...portfolioData, ...data.content };
+      renderAll();
+    }
+  }
+
+  function renderAll() {
+    const p = portfolioData;
+    // Profile
+    if (p.profile) {
+      setValue('p-name', p.profile.name || '');
+      setValue('p-role', p.profile.role || '');
+      setValue('p-location', p.profile.location || '');
+      setValue('p-status', p.profile.status || '');
+    }
+    // Summary
+    setValue('p-summary', p.summary || '');
+    // Contact
+    if (p.contact) {
+      setValue('c-email', p.contact.email || '');
+      setValue('c-phone', p.contact.phone || '');
+      setValue('c-linkedin', p.contact.linkedin || '');
+      setValue('c-github', p.contact.github || '');
+      setValue('c-twitter', p.contact.twitter || '');
+      setValue('c-website', p.contact.website || '');
+    }
+    // Lists
+    renderExpList(); renderEduList(); renderProjList();
+    // Skills
+    renderTags('skills-tags', p.skills || [], 'skills');
+    renderTags('langs-tags', p.languages || [], 'languages');
+    // Resume
+    if (p.resumeUrl) { document.getElementById('file-name').textContent = 'Resume uploaded ✓'; document.getElementById('file-attached').classList.add('visible'); }
+    // Publish URL
+    if (p.slug) { showPublishResult(p.slug); }
+  }
+
+  function setValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+  // ── SAVE ──
+  async function savePage(section) {
+    collectCurrentData(section);
+    const { error } = await supabase.from('portfolios').upsert({ user_id: currentUser.id, content: portfolioData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    if (error) showToast('Error saving: ' + error.message, true);
+    else showToast('Saved!');
+  }
+
+  function collectCurrentData(section) {
+    if (section === 'profile') {
+      portfolioData.profile = { name: val('p-name'), role: val('p-role'), location: val('p-location'), status: val('p-status') };
+    } else if (section === 'summary') {
+      portfolioData.summary = val('p-summary');
+    } else if (section === 'contact') {
+      portfolioData.contact = { email: val('c-email'), phone: val('c-phone'), linkedin: val('c-linkedin'), github: val('c-github'), twitter: val('c-twitter'), website: val('c-website') };
+    } else if (section === 'experience') {
+      portfolioData.experience = collectList('exp-list', ['org', 'role', 'date', 'location', 'desc']);
+    } else if (section === 'education') {
+      portfolioData.education = collectList('edu-list', ['school', 'degree', 'date', 'desc']);
+    } else if (section === 'projects') {
+      portfolioData.projects = collectList('proj-list', ['name', 'date', 'desc', 'tags', 'demo', 'github']);
+    }
+  }
+
+  function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  function collectList(listId, fields) {
+    const items = document.querySelectorAll(`#${listId} .list-item`);
+    return Array.from(items).map(item => {
+      const obj = {};
+      fields.forEach(f => { const el = item.querySelector(`[data-field="${f}"]`); obj[f] = el ? el.value.trim() : ''; });
+      return obj;
+    });
+  }
+
+  // ── EXPERIENCE ──
+  function addExperience(data = {}) {
+    const id = 'exp-' + Date.now();
+    const html = `
+      <div class="list-item" id="${id}">
+        <div class="list-item-header">
+          <span class="list-item-title">Experience entry</span>
+          <button class="remove-btn" onclick="document.getElementById('${id}').remove()">Remove</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">Organization</label><input class="form-input" data-field="org" value="${data.org||''}" placeholder="Company / School name" /></div>
+          <div class="form-field"><label class="form-label">Role</label><input class="form-input" data-field="role" value="${data.role||''}" placeholder="Your title / role" /></div>
+          <div class="form-field"><label class="form-label">Date range</label><input class="form-input" data-field="date" value="${data.date||''}" placeholder="Jan 2024 – Present" /></div>
+          <div class="form-field"><label class="form-label">Location</label><input class="form-input" data-field="location" value="${data.location||''}" placeholder="City, Province" /></div>
+          <div class="form-field full"><label class="form-label">Description</label><textarea class="form-textarea" data-field="desc" placeholder="What you did…">${data.desc||''}</textarea></div>
+        </div>
+      </div>`;
+    document.getElementById('exp-list').insertAdjacentHTML('beforeend', html);
+  }
+
+  function renderExpList() {
+    document.getElementById('exp-list').innerHTML = '';
+    (portfolioData.experience || []).forEach(e => addExperience(e));
+  }
+
+  // ── EDUCATION ──
+  function addEducation(data = {}) {
+    const id = 'edu-' + Date.now();
+    const html = `
+      <div class="list-item" id="${id}">
+        <div class="list-item-header">
+          <span class="list-item-title">Education entry</span>
+          <button class="remove-btn" onclick="document.getElementById('${id}').remove()">Remove</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">School / Institution</label><input class="form-input" data-field="school" value="${data.school||''}" placeholder="School or certification name" /></div>
+          <div class="form-field"><label class="form-label">Degree / Program</label><input class="form-input" data-field="degree" value="${data.degree||''}" placeholder="e.g. Grade 10 AP" /></div>
+          <div class="form-field"><label class="form-label">Date range</label><input class="form-input" data-field="date" value="${data.date||''}" placeholder="2024 – 2028" /></div>
+          <div class="form-field full"><label class="form-label">Notes</label><textarea class="form-textarea" data-field="desc" placeholder="Awards, activities, highlights…" style="min-height:60px;">${data.desc||''}</textarea></div>
+        </div>
+      </div>`;
+    document.getElementById('edu-list').insertAdjacentHTML('beforeend', html);
+  }
+
+  function renderEduList() {
+    document.getElementById('edu-list').innerHTML = '';
+    (portfolioData.education || []).forEach(e => addEducation(e));
+  }
+
+  // ── PROJECTS ──
+  function addProject(data = {}) {
+    const id = 'proj-' + Date.now();
+    const html = `
+      <div class="list-item" id="${id}">
+        <div class="list-item-header">
+          <span class="list-item-title">Project</span>
+          <button class="remove-btn" onclick="document.getElementById('${id}').remove()">Remove</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">Project name</label><input class="form-input" data-field="name" value="${data.name||''}" placeholder="TripGenius" /></div>
+          <div class="form-field"><label class="form-label">Year</label><input class="form-input" data-field="date" value="${data.date||''}" placeholder="2024" /></div>
+          <div class="form-field full"><label class="form-label">Description</label><textarea class="form-textarea" data-field="desc" placeholder="What it does, how you built it…">${data.desc||''}</textarea></div>
+          <div class="form-field full"><label class="form-label">Tech tags (comma-separated)</label><input class="form-input" data-field="tags" value="${data.tags||''}" placeholder="React, Vercel, Groq API" /></div>
+          <div class="form-field"><label class="form-label">Live demo URL</label><input class="form-input" data-field="demo" value="${data.demo||''}" placeholder="https://..." /></div>
+          <div class="form-field"><label class="form-label">GitHub URL</label><input class="form-input" data-field="github" value="${data.github||''}" placeholder="https://github.com/..." /></div>
+        </div>
+      </div>`;
+    document.getElementById('proj-list').insertAdjacentHTML('beforeend', html);
+  }
+
+  function renderProjList() {
+    document.getElementById('proj-list').innerHTML = '';
+    (portfolioData.projects || []).forEach(p => addProject(p));
+  }
+
+  // ── SKILLS ──
+  function renderTags(containerId, items, field) {
+    document.getElementById(containerId).innerHTML = items.map(s => `
+      <span class="skill-tag">${s} <button onclick="removeTag('${containerId}', '${s}', '${field}')">×</button></span>
+    `).join('');
+  }
+
+  function addSkill() {
+    const input = document.getElementById('skill-input');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!portfolioData.skills.includes(val)) { portfolioData.skills.push(val); renderTags('skills-tags', portfolioData.skills, 'skills'); }
+    input.value = '';
+  }
+
+  function addLang() {
+    const input = document.getElementById('lang-input');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!portfolioData.languages.includes(val)) { portfolioData.languages.push(val); renderTags('langs-tags', portfolioData.languages, 'languages'); }
+    input.value = '';
+  }
+
+  function removeTag(containerId, val, field) {
+    portfolioData[field] = portfolioData[field].filter(s => s !== val);
+    renderTags(containerId, portfolioData[field], field);
+  }
+
+  function handleSkillKey(e) { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }
+  function handleLangKey(e) { if (e.key === 'Enter') { e.preventDefault(); addLang(); } }
+
+  // ── RESUME UPLOAD ──
+  function handleDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
+  function handleDragLeave() { document.getElementById('upload-zone').classList.remove('dragover'); }
+  function handleDrop(e) { e.preventDefault(); handleDragLeave(); const file = e.dataTransfer.files[0]; if (file) uploadResume(file); }
+  function handleFileSelect(e) { const file = e.target.files[0]; if (file) uploadResume(file); }
+
+  async function uploadResume(file) {
+    if (file.type !== 'application/pdf') { showToast('Please upload a PDF file.', true); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('File must be under 5MB.', true); return; }
+    const progress = document.getElementById('upload-progress');
+    const fill = document.getElementById('progress-fill');
+    const status = document.getElementById('upload-status');
+    progress.classList.add('visible');
+    fill.style.width = '30%';
+    status.textContent = 'Uploading…';
+    const path = `${currentUser.id}/resume.pdf`;
+    const { error } = await supabase.storage.from('resumes').upload(path, file, { upsert: true, contentType: 'application/pdf' });
+    fill.style.width = '100%';
+    if (error) { status.textContent = 'Upload failed: ' + error.message; showToast('Upload failed.', true); return; }
+    const { data: { publicUrl } } = supabase.storage.from('resumes').getPublicUrl(path);
+    portfolioData.resumeUrl = publicUrl;
+    await supabase.from('portfolios').upsert({ user_id: currentUser.id, content: portfolioData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    setTimeout(() => {
+      progress.classList.remove('visible');
+      fill.style.width = '0%';
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-attached').classList.add('visible');
+    }, 500);
+    showToast('Resume uploaded!');
+  }
+
+  async function removeResume() {
+    portfolioData.resumeUrl = '';
+    document.getElementById('file-attached').classList.remove('visible');
+    await supabase.from('portfolios').upsert({ user_id: currentUser.id, content: portfolioData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  }
+
+  // ── PUBLISH ──
+  async function publishSite() {
+    // Save all current data first
+    collectCurrentData('profile');
+    collectCurrentData('summary');
+    collectCurrentData('contact');
+    collectCurrentData('experience');
+    collectCurrentData('education');
+    collectCurrentData('projects');
+
+    const btn = document.getElementById('publish-btn');
+    const bigBtn = document.getElementById('big-publish-btn');
+    btn.disabled = true; bigBtn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Publishing…';
+
+    // Generate a slug from name or user id
+    const name = portfolioData.profile?.name || '';
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || currentUser.id.slice(0, 8);
+    portfolioData.slug = slug;
+
+    const { error } = await supabase.from('portfolios').upsert({ user_id: currentUser.id, content: portfolioData, slug, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+    btn.disabled = false; bigBtn.disabled = false;
+    btn.textContent = '🚀 Publish';
+
+    if (error) { showToast('Publish failed: ' + error.message, true); return; }
+    showPublishResult(slug);
+    showPage('publish', document.querySelector('.sidenav-item:last-child'));
+    showToast('Published!');
+  }
+
+  function showPublishResult(slug) {
+    const url = `${window.location.origin}/portfolio/${slug}`;
+    document.getElementById('live-url').textContent = url;
+    document.getElementById('view-live-btn').href = url;
+    document.getElementById('publish-result').style.display = 'block';
+  }
+
+  function copyUrl() {
+    const url = document.getElementById('live-url').textContent;
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+  }
+
+  // ── NAVIGATION ──
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidenav-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (el) el.classList.add('active');
+  }
+
+  // ── TOAST ──
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '') + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>

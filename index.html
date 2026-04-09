@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfol.io — Build your portfolio site</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+      --text: #f0ede8; --muted: #888580; --accent: #e8d5a0; --accent2: #c4a96b;
+      --r: 12px; --rs: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2.5rem; border-bottom: 1px solid var(--border); }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); text-decoration: none; }
+
+    /* HERO */
+    .hero { max-width: 720px; margin: 0 auto; padding: 6rem 2rem 4rem; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(232,213,160,0.1); border: 1px solid rgba(232,213,160,0.2); border-radius: 100px; padding: 5px 16px; font-size: 0.78rem; font-weight: 500; color: var(--accent); margin-bottom: 2rem; }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 1.5rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 2.5rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+    /* AUTH BOX */
+    .auth-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 2rem; max-width: 400px; margin: 0 auto; }
+    .auth-tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface2); border-radius: var(--rs); padding: 4px; }
+    .auth-tab { flex: 1; padding: 7px; border-radius: 6px; border: none; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .auth-tab.active { background: var(--bg); color: var(--text); }
+    .form-field { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--rs); color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--accent2); }
+    .form-input::placeholder { color: var(--muted); }
+    .btn-primary { width: 100%; padding: 11px; background: var(--accent); color: #0a0a0a; border: none; border-radius: var(--rs); font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-msg { font-size: 0.82rem; text-align: center; margin-top: 1rem; min-height: 20px; }
+    .auth-msg.error { color: #f87171; }
+    .auth-msg.success { color: #4ade80; }
+    .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+    /* FEATURES */
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 720px; margin: 4rem auto 0; padding: 0 2rem; }
+    .feature { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem; }
+    .feature-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .feature-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .feature-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #0a0a0a; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Portfol.io</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">✦ Free portfolio builder</div>
+  <h1>Your portfolio site,<br><span>in minutes.</span></h1>
+  <p>Fill in your info, upload your resume, and publish a beautiful portfolio website — no coding required.</p>
+
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="setTab('login', this)">Sign in</button>
+      <button class="auth-tab" onclick="setTab('signup', this)">Create account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="form-field">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="you@example.com" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="handleLogin()">Sign in</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="tab-signup" style="display:none;">
+      <div class="form-field">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="signup-password" placeholder="At least 6 characters" />
+      </div>
+      <button class="btn-primary" id="signup-btn" onclick="handleSignup()">Create account</button>
+      <div class="auth-msg" id="signup-msg"></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">📝</div>
+      <div class="feature-title">Fill in your info</div>
+      <div class="feature-desc">Add experience, skills, projects, education, and contact details through a simple form.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📄</div>
+      <div class="feature-title">Upload your resume</div>
+      <div class="feature-desc">Upload a PDF resume that visitors can download directly from your portfolio.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🚀</div>
+      <div class="feature-title">Publish instantly</div>
+      <div class="feature-desc">Get a shareable link to your live portfolio that you can send to anyone.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── PASTE YOUR SUPABASE CREDENTIALS HERE ──
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Redirect if already logged in
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = '/dashboard.html';
+  });
+
+  function setTab(tab, btn) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('tab-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+    const msg = document.getElementById('login-msg');
+    if (!email || !password) { msg.textContent = 'Please fill in all fields.'; msg.className = 'auth-msg error'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Signing in…';
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; btn.disabled = false; btn.textContent = 'Sign in'; }
+    else window.location.href = '/dashboard.html';
+  }
+
+  async function handleSignup() {
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const btn = document.getElementById('signup-btn');
+    const msg = document.getElementById('signup-msg');
+    if (!email || !password) { msg.textContent = 'Please fill in all fields.'; msg.className = 'auth-msg error'; return; }
+    if (password.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.className = 'auth-msg error'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Creating account…';
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; btn.disabled = false; btn.textContent = 'Create account'; }
+    else { msg.textContent = '✓ Check your email to confirm your account, then sign in.'; msg.className = 'auth-msg success'; btn.textContent = 'Create account'; btn.disabled = false; }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const activeTab = document.querySelector('.auth-tab.active').textContent;
+      if (activeTab === 'Sign in') handleLogin();
+      else handleSignup();
+    }
+  });
+</script>
+</body>
+</html>
