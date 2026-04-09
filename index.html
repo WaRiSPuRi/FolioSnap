@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FolioSnap — Build your portfolio site</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+      --text: #f0ede8; --muted: #888580; --accent: #e8d5a0; --accent2: #c4a96b;
+      --r: 12px; --rs: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,10,10,0.92); backdrop-filter: blur(12px); z-index: 100; }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); text-decoration: none; }
+    .nav-links { display: flex; align-items: center; gap: 1rem; }
+    .btn { padding: 8px 18px; border-radius: var(--rs); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.15s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .btn-accent { background: var(--accent); color: #0a0a0a; font-weight: 600; }
+    .btn-accent:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-lg { padding: 12px 28px; font-size: 0.95rem; }
+
+    /* HERO */
+    .hero { max-width: 780px; margin: 0 auto; padding: 7rem 2rem 5rem; text-align: center; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(232,213,160,0.1); border: 1px solid rgba(232,213,160,0.2); border-radius: 100px; padding: 5px 16px; font-size: 0.78rem; font-weight: 500; color: var(--accent); margin-bottom: 2rem; }
+    .bdot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.8rem, 7vw, 5rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 1.5rem; }
+    h1 span { color: var(--accent); }
+    .hero-sub { color: var(--muted); font-size: 1.05rem; line-height: 1.85; margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 4rem; }
+
+    /* PORTFOLIO SHOWCASE CARDS */
+    .showcase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 780px; margin: 0 auto; padding: 0 2rem; }
+    .showcase-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .sc-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+    .sc-avatar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .sc-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.72rem; flex-shrink: 0; }
+    .sc-name { font-weight: 600; font-size: 0.82rem; }
+    .sc-role { font-size: 0.72rem; color: var(--muted); }
+    .sc-body { padding: 10px 16px 14px; }
+    .sc-line { height: 5px; border-radius: 3px; margin-bottom: 5px; background: var(--surface2); }
+    .sc-line.short { width: 60%; }
+    .sc-line.med { width: 80%; }
+    .sc-line.full { width: 100%; }
+    .sc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+    .sc-tag { padding: 2px 8px; border-radius: 100px; font-size: 0.65rem; font-weight: 500; }
+    .sc-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+
+    /* Template badges */
+    .tpl-badge { font-size: 0.62rem; font-weight: 600; padding: 2px 7px; border-radius: 100px; margin-left: auto; }
+
+    /* FEATURES */
+    .features { max-width: 900px; margin: 5rem auto 0; padding: 0 2rem 6rem; }
+    .fl { text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+    .ft { text-align: center; font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 3rem; }
+    .fg { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; }
+    .fc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; transition: border-color 0.2s; }
+    .fc:hover { border-color: var(--border2); }
+    .fi { font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .fn { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.4rem; }
+    .fd { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+    /* HOW IT WORKS */
+    .how { max-width: 700px; margin: 0 auto; padding: 0 2rem 6rem; text-align: center; }
+    .ht { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 3rem; }
+    .steps { display: flex; flex-direction: column; }
+    .step { display: flex; gap: 1.25rem; align-items: flex-start; padding: 1.25rem; border-radius: var(--r); text-align: left; }
+    .step:hover { background: var(--surface); }
+    .snum { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+    .stit { font-weight: 500; font-size: 0.92rem; margin-bottom: 0.25rem; }
+    .sdesc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* CTA */
+    .cta-s { max-width: 600px; margin: 0 auto; padding: 0 2rem 6rem; text-align: center; }
+    .cta-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 3rem 2rem; }
+    .cta-box h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .cta-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; text-align: center; font-size: 0.8rem; color: var(--muted); }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 680px) {
+      nav { padding: 1rem 1.25rem; }
+      .showcase { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/">FolioSnap</a>
+  <div class="nav-links">
+    <a href="/login.html" class="btn btn-ghost">Sign in</a>
+    <a href="/login.html#signup" class="btn btn-accent">Get started free</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="badge"><span class="bdot"></span> Free · No coding required · Live in minutes</div>
+  <h1>Your portfolio site,<br><span>done right.</span></h1>
+  <p class="hero-sub">Fill in your info, pick a template, and publish a beautiful portfolio that gets you noticed.</p>
+  <div class="ctas">
+    <a href="/login.html#signup" class="btn btn-accent btn-lg">Create your portfolio →</a>
+    <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+  </div>
+</div>
+
+<!-- PORTFOLIO SHOWCASE -->
+<div class="showcase">
+
+  <!-- Card 1: Minimal template -->
+  <div class="showcase-card">
+    <div class="sc-header">
+      <div class="sc-avatar-row">
+        <div class="sc-avatar" style="background:#1a1917;color:#fff;">JC</div>
+        <div>
+          <div class="sc-name">Jamie Chen</div>
+          <div class="sc-role">UX Designer · Toronto</div>
+        </div>
+        <span class="tpl-badge" style="background:rgba(255,255,255,0.08);color:#888;">Minimal</span>
+      </div>
+      <div class="sc-line short" style="background:rgba(255,255,255,0.06);"></div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-label">Experience</div>
+      <div class="sc-line med"></div>
+      <div class="sc-line full"></div>
+      <div class="sc-tags">
+        <span class="sc-tag" style="background:#f0efed;color:#6b6a66;">Figma</span>
+        <span class="sc-tag" style="background:#f0efed;color:#6b6a66;">React</span>
+        <span class="sc-tag" style="background:#f0efed;color:#6b6a66;">UX</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Dark template -->
+  <div class="showcase-card" style="background:#0d0d0d;border-color:rgba(255,255,255,0.06);">
+    <div class="sc-header" style="border-color:rgba(255,255,255,0.06);">
+      <div class="sc-avatar-row">
+        <div class="sc-avatar" style="background:#e8d5a0;color:#0a0a0a;">MR</div>
+        <div>
+          <div class="sc-name" style="color:#f0ede8;">Marcus Reid</div>
+          <div class="sc-role" style="color:#888580;">Software Engineer · Vancouver</div>
+        </div>
+        <span class="tpl-badge" style="background:rgba(232,213,160,0.15);color:#e8d5a0;">Dark</span>
+      </div>
+      <div class="sc-line short" style="background:#1a1a1a;"></div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-label" style="color:#555;">Projects</div>
+      <div class="sc-line med" style="background:#1a1a1a;"></div>
+      <div class="sc-line full" style="background:#1a1a1a;"></div>
+      <div class="sc-tags">
+        <span class="sc-tag" style="background:#1a1a1a;color:#888;">Python</span>
+        <span class="sc-tag" style="background:#1a1a1a;color:#888;">AWS</span>
+        <span class="sc-tag" style="background:#1a1a1a;color:#888;">Node</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Pastel template -->
+  <div class="showcase-card" style="background:#faf5ff;border-color:#e9d5ff;">
+    <div class="sc-header" style="border-color:#e9d5ff;">
+      <div class="sc-avatar-row">
+        <div class="sc-avatar" style="background:#7c3aed;color:#fff;">SP</div>
+        <div>
+          <div class="sc-name" style="color:#3b0764;">Sofia Patel</div>
+          <div class="sc-role" style="color:#7c3aed;">Marketing Lead · London</div>
+        </div>
+        <span class="tpl-badge" style="background:#ede9fe;color:#7c3aed;">Pastel</span>
+      </div>
+      <div class="sc-line short" style="background:#ede9fe;"></div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-label" style="color:#a78bfa;">Education</div>
+      <div class="sc-line med" style="background:#ede9fe;"></div>
+      <div class="sc-line full" style="background:#ede9fe;"></div>
+      <div class="sc-tags">
+        <span class="sc-tag" style="background:#ede9fe;color:#7c3aed;">SEO</span>
+        <span class="sc-tag" style="background:#ede9fe;color:#7c3aed;">Branding</span>
+        <span class="sc-tag" style="background:#ede9fe;color:#7c3aed;">Analytics</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="fl">Everything you need</div>
+  <div class="ft">Built for people, not developers</div>
+  <div class="fg">
+    <div class="fc"><div class="fi">📝</div><div class="fn">Simple editor</div><div class="fd">Fill in experience, skills, education, and projects through a clean guided form.</div></div>
+    <div class="fc"><div class="fi">🎨</div><div class="fn">5 templates + custom</div><div class="fd">Pick Minimal, Dark, Bold, Pastel, or Terminal — or build your own with custom fonts and colours.</div></div>
+    <div class="fc"><div class="fi">📄</div><div class="fn">Resume upload</div><div class="fd">Upload a PDF that visitors can view inline or download directly from your portfolio.</div></div>
+    <div class="fc"><div class="fi">🚀</div><div class="fn">One-click publish</div><div class="fd">Hit publish and get a shareable link instantly. Update and republish anytime.</div></div>
+    <div class="fc"><div class="fi">🔗</div><div class="fn">Your own URL</div><div class="fd">Your portfolio lives at a clean link like <code style="font-size:0.78rem;color:var(--accent);">foliosnap.app/p/name</code></div></div>
+    <div class="fc"><div class="fi">📱</div><div class="fn">Mobile friendly</div><div class="fd">Looks great on every device — phone, tablet, or desktop.</div></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how" id="how">
+  <div class="ht">How it works</div>
+  <div class="steps">
+    <div class="step"><div class="snum">1</div><div><div class="stit">Create a free account</div><div class="sdesc">Sign up with your email — no credit card required.</div></div></div>
+    <div class="step"><div class="snum">2</div><div><div class="stit">Fill in your info</div><div class="sdesc">Add your profile, experience, education, projects, and skills using the editor.</div></div></div>
+    <div class="step"><div class="snum">3</div><div><div class="stit">Pick a template</div><div class="sdesc">Choose from 5 pre-built styles or fully customize fonts, colours, and which sections to show.</div></div></div>
+    <div class="step"><div class="snum">4</div><div><div class="stit">Publish and share</div><div class="sdesc">Hit publish and get a live shareable link to send to anyone — recruiters, clients, or collaborators.</div></div></div>
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="cta-s">
+  <div class="cta-box">
+    <h2>Ready to build yours?</h2>
+    <p>Join hundreds of professionals who've published their portfolio with FolioSnap — completely free.</p>
+    <a href="/login.html#signup" class="btn btn-accent btn-lg">Get started free →</a>
+  </div>
+</div>
+
+<footer><p>Made with ✦ by <span>FolioSnap</span></p></footer>
+</body>
+</html>
